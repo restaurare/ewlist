@@ -1,8 +1,7 @@
 {
   "entrypoint": "index.html",
   "fragments": [
-    "src/ew-home/bundle-0.html",
-    "src/ew-home/bundle-1.html"
+    "src/ew-home/bundle-0.html"
   ],
   "sources": [
     "src/**/*",

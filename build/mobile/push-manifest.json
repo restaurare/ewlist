@@ -1,6 +1,5 @@
 {
   "src/ew-home/bundle-0.html": {},
-  "src/ew-home/bundle-1.html": {},
   "index.html": {
     "bower_components/webcomponentsjs/custom-elements-es5-adapter.js": {
       "type": "script",
