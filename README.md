@@ -17,10 +17,17 @@ Replace `[my-app-name]` with the desired directory name for your new application
 * Point your virtual host document root to your new application's `public/` directory.
 * Ensure `logs/` is web writable.
 
+##Docker or Composer
+
+To run composer, you can install composer on your computer, or just use the docker composer container.
 ```bash
-docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 create-project slim/slim-skeleton [my-app-name]
+docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 [your composer command]
+```
+
+```bash
+composer create-project slim/slim-skeleton [my-app-name]
 cd [my-app-name]
-docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 require restaurare/ewlist "dev-master"
+composer require restaurare/ewlist "dev-master"
 ```
 
 You don't need to know any of HTML, CSS or JAVASCRIPT, you just need to create a symlink or copy the latest mobile web build inside de public folder off the slim framework skeleton.
