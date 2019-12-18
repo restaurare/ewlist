@@ -1,6 +1,8 @@
-# Restaurare Web-Mobile Fast tool to Application Development
+# Restaurare Web-Mobile is a fast tool to develop a mobile site.
 
-This component is a new way to rapid develop web-mobile applications, almost anyone can create a mobile web app in less then 10 minutes using the most recent technologies like web-components.
+This component is a new way to rapid develop web-mobile applications, almost anyone can create a mobile web app in less then 10 minutes using the most recent technologies like web-components, material design, etc...
+
+You can build amazing web-mobile site interfaces, totaly user friendly, resolution adjustable by just creating and defining a JSON. That's it, you just get any 'data' from your database, format your data to our JSON standard (we have some helpers for you) and define your interface, and your site is DONE.
 
 The concept behind this component, is that the developer doesn't need to handle and write any HTML, CSS or JAVASCRIPT to get the job done, all it needs to do is to create a JSON to define how the interface will be. To create this JSON we have some classes to help you out, so all the developer needs to know is how to call the methods off the class Ewlist/View.
 
@@ -15,10 +17,17 @@ Replace `[my-app-name]` with the desired directory name for your new application
 * Point your virtual host document root to your new application's `public/` directory.
 * Ensure `logs/` is web writable.
 
+##Docker or Composer
+
+To run composer, you can install composer on your computer, or just use the docker composer container.
 ```bash
-docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 create-project slim/slim-skeleton [my-app-name]
+docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 [your composer command]
+```
+
+```bash
+composer create-project slim/slim-skeleton [my-app-name]
 cd [my-app-name]
-docker run --rm -it --volume $(pwd):/app prooph/composer:7.2 require restaurare/ewlist "dev-master"
+composer require restaurare/ewlist "dev-master"
 ```
 
 You don't need to know any of HTML, CSS or JAVASCRIPT, you just need to create a symlink or copy the latest mobile web build inside de public folder off the slim framework skeleton.
@@ -71,9 +80,11 @@ return function (App $app) {
 
 ```
 
+Dump-autoload from composer and Optimize with "-o" option, 
 To run the application in development, you can run these commands 
 
 ```bash
+composer dump-autoload -o
 composer start
 ```
 
