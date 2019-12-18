@@ -1,4 +1,4 @@
-# Restaurare Web-Mobile is a fast tool to develop a mobile site.
+# Restaurare is a fast tool to develop a mobile web-site.
 
 ![Alt text](/images/print_2.png?raw=true "Optional Title")
 
