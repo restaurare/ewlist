@@ -1,0 +1,24 @@
+{
+    "name": "restaurare/ewlist",
+    "description": "ListView composer Package",
+    "version" : "1.0.0",
+    "authors": [
+        {
+            "name": "Jair Goncalves Pereira Junior",
+            "email": "pereira.jair@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Ewlist": "src/Ewlist"
+        }
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "Ewlist": "src/Ewlist"
+        }
+    },
+    "require": {
+        "slim/slim": "3.*"
+    }
+}

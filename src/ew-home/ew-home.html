@@ -1,0 +1,637 @@
+<!--
+`ew-home`
+Elements Widgets - Home Screen
+
+@demo demo/index.html 
+-->
+<!-- <style is="custom-style">
+  
+    paper-card {
+      color: var(--paper-menu-color) !important;
+      background-color: var(--paper-menu-background-color) !important;
+    }
+  
+</style> -->
+<dom-module id="ew-home">
+  <template>
+    <style>
+      :host {
+        display: block;
+        height: 100%;
+      }
+      body {
+        margin: 0;
+      } 
+      .fullHeight {
+        height: 100%;
+      }
+      .background-image {
+        position: fixed;
+        left: 0px;
+        display: block;
+        background-size: 100% 100%;
+        min-width: 120%;
+        min-height: 100%;
+        z-index: 0;
+        background-color:#E5E5E5;
+      }
+      .ew-content {
+        left: 0;
+        right: 0;
+        z-index: 0;
+      }
+
+      .grid-sizer {
+        position: absolute;
+      }
+      .grid-sizer, 
+      .grid-item {
+          width: 10%;
+          height:10%;
+      }
+      .column-holder {
+          width: 100%; 
+          max-height: 100% !important;
+          height:calc(100vh - 51px) !important;     
+          overflow-y: auto;   
+          overflow-x: hidden; 
+      }
+      .resize-preview {
+        position: absolute;
+        z-index: 200;
+        border: 3px dotted #424242;
+        min-width: 250px;
+      }
+      app-toolbar {
+        background: var(--paper-toolbar-background);
+        color: var(--paper-toolbar-color);
+      }
+      app-drawer {
+        background: var(--paper-menu-background-color);
+        color: var(--paper-menu-color);
+      }
+
+      #mainToolbar { background-color: #FFF; color: #424540; height: 51px; box-shadow: 1px 1px 1px var(--paper-tabs-selection-bar-color); }
+      #loadingProgressBar { width: 100%; }
+      #pages { overflow-y: auto; }
+
+      @media screen and (max-width: 900px) { 
+        .pageName {
+          display: none;
+        }
+      }
+      .logo-system {
+        width: 200px;
+        top: 0px;
+        height: 50px;
+      }
+      #fabNews {
+        background-color: #F60;
+        color: white;
+      }
+      #fabAdd {
+        /* background-color: var(--paper-green-500); */
+        color: white;
+        
+      }
+      .fabButton {
+          background-color: var(--paper-progress-active-color);
+          color: white;
+          margin: 4px;
+          font-size: 12px;
+          padding: 0.5em 0.57em;
+          border-radius: 20px;
+          
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+          transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+
+          --paper-button-ink-color: var(--paper-progress-active-color);
+          --paper-button-flat-keyboard-focus: {
+            background-color: var(--paper-progress-active-color);
+            color: white !important;
+          };
+          --paper-button-raised-keyboard-focus: {
+            background-color: var(--paper-progress-active-color) !important;
+            color: white !important;
+          };
+          
+      }
+      .fabButton:hover {
+          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        }
+      .displayNone { display: none; }
+
+     
+    </style> 
+   
+
+    <iron-signals on-iron-signal-ew-auth-invalid="logout"></iron-signals>
+
+    <iron-localstorage id="optionsLocalStorage" name="options" value="{{options}}" on-iron-localstorage-load-empty="_initializeDefaultOptions"></iron-localstorage>
+
+    <div class="ew-content fullHeight" style$="{{_computeHomeWidgetsStyle(options)}}"> 
+      <div id="homeWidgets" class="fullHeight">
+        <ew-view id="mobileView" style="height: 100vh;" is-mobile="{{isMobile}}" params="{{menuViewParams}}" hidden="{{!isMobile}}" multi></ew-view>
+        <slot name='content'></slot>
+      </div>
+    </div>
+    <div id="backgroundTasks"></div>
+
+    <ew-column-dialog is-mobile="{{isMobile}}"></ew-column-dialog>         
+    <ew-confirm-dialog></ew-confirm-dialog>
+    <paper-toast id="messageArea" duration="5000" text="'{{messageToast}}'"></paper-toast>
+    <ew-snackbar id="snackBar"></ew-snackbar>
+  </template>
+  <script>
+    Polymer({
+      is: 'ew-home', 
+      behaviors: [EWBehaviorWidgetBehavior , Polymer.IronResizableBehavior],
+      listeners: {
+        'ew-show-message' : 'showMessage',
+        'ew-register-background-task' : 'registerBackgroundTask',
+        'ew-unregister-background-task' : 'unregisterBackgroundTask',
+      },
+      properties: {
+        debug: {
+          type: Boolean,
+          value: false,
+        },
+        menuViewParams: {
+          type: Object,
+          value: {},
+        },
+        hideNews: {
+          type: Boolean,
+          value: true,
+          reflectToAttribute: true,
+          notify: true,
+        },
+        options: {
+          type: Object,
+          value: { builtIn: false, top: 0 },
+          reflectToAttribute: false,
+          notify: true
+        },
+        forcePageReload: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+        isLoading: {
+          type: Boolean,
+          value: false,
+          notify: true,
+        },
+        isMobile: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true,
+          notify: true
+        },
+        isDatabaseConnected: {
+          type: Boolean,
+          value: true,
+          reflectToAttribute: true,
+          notify: true
+        },
+        showAddButton: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true,
+          notify: true,
+        },
+        isLogged: {
+          type: Boolean,
+          value: true,
+          reflectToAttribute: true,
+          notify: true
+        },
+        widgets: {
+          type: Object,
+          value: {},
+          notify: true,
+          reflectToAttribute: false, 
+        }, 
+        loginResponse: {
+          type: Object,
+          value: {},
+          notify: true,
+          reflectToAttribute: false, 
+        }, 
+        packerys: {
+          type: Array,
+          value: [ ],
+          notify: true,
+          reflectToAttribute: false,
+        },
+        selectedPage: {
+          type: Number,
+          value: 0,
+          notify: true,
+        },
+        selectedMobilePage: {
+          type: Number,
+          value: 0,
+          notify: true,
+        },
+        usedColumns: {
+          type: Object,
+          value: {},
+          reflectToAttribute: false,
+          notify: true
+        }, 
+        showTabsAndSettings: {
+          type: Boolean,
+          value: true,
+        },
+        messageToast: {
+          type: String,
+          value: ''
+        },
+        params: { 
+            type: Object, 
+            value: {}, 
+            notify: true, 
+            reflectToAttribute: false
+        },
+   
+
+        backgroundTasks: {
+          type: Array,
+          value: function () {
+            return [];
+          },
+          notify: true,
+          reflectToAttribute: true,
+        },
+        target: {
+          type: Object,
+          value: function() {
+            return document.body;
+          }
+        },
+        loadedThemes: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+
+      },
+
+  
+      /*
+        LOGIN / LOGOUT FUNCTIONS
+      */
+      ready: function() {
+        this.log('ew-home.ready');    
+
+        ewidgets.debug = this.debug;   
+
+        // listen for online/offline
+        Polymer.RenderStatus.afterNextRender(this, function() {
+          this.listen(window, 'online', '_notifyNetworkStatus');
+          this.listen(window, 'offline', '_notifyNetworkStatus');
+        });
+        
+        this._translateMoment();
+        this.$.optionsLocalStorage.reload();
+
+        this._checkNavigator();
+        this.lazyLoadComponents();
+
+        this.$.mobileView.multi = true;
+        this.$.mobileView.element = 'ew-list-view';
+        if (ROUTE != undefined) {
+          this.menuViewParams = { 'route': ROUTE };
+        }
+        this.$.mobileView.render();
+
+        // this.loadTheme('theme');
+
+        if ((THEME != undefined) && (THEME != 'theme')) {
+          this.loadTheme(THEME);
+        } 
+      }, 
+
+      lazyLoadComponents: function() {
+        // this.async(function() {
+        //   var _components = ["/app/src/ew-home/bundle-2.html"];
+        //   ewidgets.importLazyWidgets(_components);
+        // } ,3000);
+      },
+
+
+      logout: function() {
+        this.log("ew-home.logout");
+
+        if (this.isLogged) {
+       
+          if (this.options.builtIn) {
+            //this.isLogged = false;
+            window.localStorage.clear();
+            window.location.reload();
+            this.showMessage({detail: { message: 'Sua sessão expirou!'} });
+          } else {
+
+
+              this.selectedPage = 0;
+              this.loadedPages = [];
+              this.packerys = [];
+              //this.isLogged = false;
+              this.loginResponse = { "auth" : "" };
+              // this._initializeDefaultGlobalParams();
+              var _tempOtions = this.options;
+              window.localStorage.clear();
+              this.options = _tempOtions;
+              this.$.optionsLocalStorage.save();
+
+              this.clearColumns();
+              this.clearBackgroundTasks();
+              
+              window.localStorage.clear();
+              window.location.href = 'logout.php';
+
+          }
+          
+           /**/
+        }
+      },
+      removeLoading: function(){ 
+        // document.body.classList.remove('loading');
+      },
+
+      /*
+        LOCAL STORAGE FUNCTIONS
+      */
+      _initializeDefaultOptions: function() {
+        this.log('ew-home._initializeDefaultOptions');
+        this.options = {}; 
+        this.options.builtIn = false; 
+        this.options.top = 0; 
+      },
+
+      _computeHomeWidgetsStyle : function(options) {
+        var cssClass =  " ";
+        if (options) {
+          if (options.top != 0) {
+            cssClass = ' top:' + options.top + 'px; width: 100%;';
+          }
+        }
+        return cssClass;
+      },
+      _computeIronPagesLayoutStyle: function(options) {
+        var cssClass =  " ";
+        if (options) {
+          if (options.top != 0) {
+          //  if (options.builtIn) {
+              cssClass = ' margin-top:' + options.top + 'px';
+          //  }
+          }
+          if (options.builtIn == false) {
+            cssClass = ' height: calc(100%) !important;';
+          }
+        }
+        return cssClass;
+      }, 
+      _computeHeaderLayoutStyle: function(options) {
+        var cssClass =  " ";
+        if (options) {
+          if (options.top != 0) {
+            if (!options.builtIn) {
+              cssClass = ' top:' + options.top + 'px';
+            }
+          }
+        }
+        return cssClass;
+      },
+      _computeHeaderStyle: function(options) {
+        var cssClass =  " width: 100%; ";
+        if (options) {
+          if (options.top != 0) {
+            cssClass = cssClass + ' top:' + options.top + 'px';
+          }
+        }
+        return cssClass;
+      },
+
+      /* CHECK NAVIGATOR */
+      _checkNavigator: function() {
+        var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+        var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
+        var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+        var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+        var is_ipad = navigator.userAgent.indexOf("iPad") > -1;
+        var is_iphone = navigator.userAgent.indexOf("iPhone") > -1;
+        var is_android = navigator.userAgent.indexOf("Android") > -1;
+        var is_opera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+        if ((is_chrome)&&(is_safari)) {is_safari=false;}
+        if ((is_chrome)&&(is_opera)) {is_chrome=false;}
+        if (this.options != undefined) {
+          if (this.options.forceMobile != undefined) {
+            if (this.options.forceMobile == true) {
+              this._mobileMode(true);
+            }
+          }
+          if ((is_ipad) || (is_iphone) || (is_android)) {
+            this._mobileMode(true);
+          } else {
+            if ((is_chrome) || (is_safari)) {
+              if (!this.options.builtIn) {
+                // $('#widgetsApp').css('height','calc(100%)');
+
+                
+              }
+            }
+          }
+        }
+
+        this._mobileMode(true);
+      },
+      _mobileMode: function(_isMobileMode) {
+        if (_isMobileMode != undefined) {
+          this.isMobile = _isMobileMode;
+        } else {
+          this.isMobile = !this.isMobile;
+        }
+        ewidgets.isMobile = this.isMobile;
+      },
+      /*
+        UTIL FUNCTIONS
+        MOMENT-JS Translate Function.
+      */
+      _translateMoment: function() {
+        if (moment != undefined) {
+          moment.defineLocale('pt-br', {
+                months : 'janeiro_fevereiro_março_abril_maio_junho_julho_agosto_setembro_outubro_novembro_dezembro'.split('_'),
+                monthsShort : 'jan_fev_mar_abr_mai_jun_jul_ago_set_out_nov_dez'.split('_'),
+                weekdays : 'domingo_segunda-feira_terça-feira_quarta-feira_quinta-feira_sexta-feira_sábado'.split('_'),
+                weekdaysShort : 'dom_seg_ter_qua_qui_sex_sáb'.split('_'),
+                weekdaysMin : 'dom_2ª_3ª_4ª_5ª_6ª_sáb'.split('_'),
+                longDateFormat : {
+                    LT : 'HH:mm',
+                    LTS : 'LT:ss',
+                    L : 'DD/MM/YYYY',
+                    LL : 'D [de] MMMM [de] YYYY',
+                    LLL : 'D [de] MMMM [de] YYYY [às] LT',
+                    LLLL : 'dddd, D [de] MMMM [de] YYYY [às] LT'
+                },
+                calendar : {
+                    sameDay: '[Hoje às] LT',
+                    nextDay: '[Amanhã às] LT',
+                    nextWeek: 'dddd [às] LT',
+                    lastDay: '[Ontem às] LT',
+                    lastWeek: function () {
+                        return (this.day() === 0 || this.day() === 6) ?
+                            '[Último] dddd [às] LT' : // Saturday + Sunday
+                            '[Última] dddd [às] LT'; // Monday - Friday
+                    },
+                    sameElse: 'L'
+                },
+                relativeTime : {
+                    future : 'em %s',
+                    past : '%s atrás',
+                    s : 'segundos',
+                    m : 'um minuto',
+                    mm : '%d minutos',
+                    h : 'uma hora',
+                    hh : '%d horas',
+                    d : 'um dia',
+                    dd : '%d dias',
+                    M : 'um mês',
+                    MM : '%d meses',
+                    y : 'um ano',
+                    yy : '%d anos'
+                },
+                ordinalParse: /\d{1,2}º/,
+                ordinal : '%dº'
+            });
+
+            moment.locale('pt-br');
+          }
+      }, 
+      _notifyNetworkStatus: function() {
+        this.log('ew-home._notifyNetworkStatus');
+        var oldOffline = this.offline;
+        this.offline =  !navigator.onLine;
+        // Show the snackbar if the user is offline when starting a new session
+        // or if the network status changed.
+        if (this.offline || (!this.offline && oldOffline === true)) {
+
+          Polymer.dom(this.$.snackBar).innerHTML = this.offline ?
+              'Você não está conectado a internet.' : 'Você está online.';
+          
+          this.$.snackBar.open();
+        }
+      },
+      _escapeJSON: function(str) {
+        return str.replace(/[\\]/g, '\\\\').replace(/[\"]/g, '\\\"').replace(/[\/]/g, '\\/').replace(/[\b]/g, '\\b').replace(/[\f]/g, '\\f').replace(/[\n]/g, '\\n').replace(/[\r]/g, '\\r').replace(/[\t]/g, '\\t');
+      },
+
+      /*
+        BACKGROUND TASKS
+      */
+      getBackgroundTaskByName: function(_name) {
+        if (this.backgroundTasks.indexOf(_name) != -1) {
+          var _elements = document.getElementsByTagName(_name);
+          return _elements[0];
+        } else {
+          return false;
+        }
+      },
+      unregisterBackgroundTask: function(event) {
+        this.log('ew-home.unregisterBackgroundTask:');
+        this.log(this.backgroundTasks);
+        var detail = event.detail;
+
+        if (this.backgroundTasks.indexOf(detail.element) != -1) {
+          document.getElementsByTagName(detail.element).remove();
+        }
+      },
+      registerBackgroundTask: function(event) {
+        var detail = event.detail;
+        if (this.backgroundTasks.indexOf(detail.element) == -1) {
+          this.log('ew-home.registerBackgroundTask:' + event.detail.element);
+          var el = document.createElement(detail.element);
+          el.params = detail.params;
+          el.refreshInterval = detail.refreshInterval;
+          this.backgroundTasks.push(detail.element);
+          this.$.backgroundTasks.append(el);
+          // $('* /deep/ #backgroundTasks')[0].append(el);
+          // document.getElementById('body /deep/ #backgroundTasks').append(el);
+        }
+        
+      },
+      clearBackgroundTasks: function() {
+        this.log('ew-home.clearBackgroundTasks');
+        this.backgroundTasks = [];
+        $('#backgroundTasks').html("");
+      },
+
+    
+      /*
+        LOAD ANIMATIONS
+      */
+      loadAnimations: function(themeName) {
+        this.log('ew-home.loadAnimations');
+        var cssImport = document.createElement("link");
+        cssImport.id = "animationLoader";
+        cssImport.rel = "stylesheet";
+        cssImport.href = "/app/src/ew-home/css/animate.css";
+        document.head.appendChild(cssImport);
+      },
+      /*
+        LOAD THEME
+      */
+      loadTheme: function(themeName) {
+        this.log('ew-home.loadTheme:' + themeName);
+        if ((themeName == 'undefined') || (themeName == undefined)) {
+          themeName = 'theme';
+        }
+        var cssImport = document.createElement("link");
+        cssImport.id = "themeLoader";
+        cssImport.rel = "import";
+        if (themeName == 'theme') {
+          cssImport.href = "/mobile/src/ew-home/" + themeName + ".html";
+        } else {
+          cssImport.href = "/mobile/bower_components/polymer-themes/" + themeName + ".html";
+        }
+        if (this.loadedThemes.indexOf(themeName) >= 0) {
+          this.forcePageReload = true;
+          this.themeAlreadyLoaded = true;
+        }
+        this.push('loadedThemes',themeName);
+        document.head.appendChild(cssImport);
+
+      },
+      windowResized: function() {
+        this.chatVisible = !this.chatVisible;
+        this.chatVisible = !this.chatVisible;
+        this.notifyResize();
+      },
+      showMessage: function(event) {
+        this.log('ew-home.showMessage');
+        this.$.messageArea.show({text: event.detail.message , duration: 3000 });
+      },
+      getViewBlockedParams: function() {
+        var _releaseDate = this.versionReleaseDate.format('DD/MM/YYYY');
+        return { 
+          action: 'ew-list-view',
+          signal: '',
+          params: { 
+            showHeader: true,
+            widgetTitle: 'Aviso',
+            hideSearch: true,
+            items: [
+              {  action: 'ew_close', viewTypeCard: true, icon: 'icons:error', title: 'Desculpe-nos pelo transtorno e inconveniente.', description: 'Esta funcionalidade foi temporariamente desabilitada pela administração do sistema, assim que possível ela estará disponível novamente. ', mobile: true },
+            ],
+          }, 
+          mobile: true, 
+          icon: 'av:fiber-new', 
+          title: 'Aviso', 
+          description: 'Conteúdo bloqueado..'
+        };
+      },
+     
+    });
+  </script>
+</dom-module>

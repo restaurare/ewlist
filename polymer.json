@@ -1,0 +1,32 @@
+{
+  "entrypoint": "index.html",
+  "fragments": [
+    "src/ew-home/bundle-0.html",
+    "src/ew-home/bundle-1.html"
+  ],
+  "sources": [
+    "src/**/*",
+    "index.html"
+  ],
+  "extraDependencies": [
+    "bower_components/webcomponentsjs/*.js",
+    "favicon.ico",
+    "bower_components/polymer-themes/**",
+    "bower_components/monaco-editor/**",
+    "bower_components/polymer-vis/**",
+    "bower_components/polymer/**"
+  ],
+  "builds": [
+    { 
+      "name": "mobile",
+      "preset": "es6-bundled",
+      "bundle": { "stripComments": true },
+      "exclude": ["*.svg" ], 
+      "js": {"compile": true, "minify": true},
+      "css": {"minify": true},
+      "html": { "minify": true }, 
+      "addServiceWorker": true,
+      "addPushManifest": true
+    }
+  ]
+}
