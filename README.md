@@ -1,6 +1,8 @@
-# Restaurare Web-Mobile Fast tool to Application Development
+# Restaurare Web-Mobile is a fast tool to develop a mobile site.
 
-This component is a new way to rapid develop web-mobile applications, almost anyone can create a mobile web app in less then 10 minutes using the most recent technologies like web-components.
+This component is a new way to rapid develop web-mobile applications, almost anyone can create a mobile web app in less then 10 minutes using the most recent technologies like web-components, material design, etc...
+
+You can build amazing web-mobile site interfaces, totaly user friendly, resolution adjustable by just creating and defining a JSON. That's it, you just get any 'data' from your database, format your data to our JSON standard (we have some helpers for you) and define your interface, and your site is DONE.
 
 The concept behind this component, is that the developer doesn't need to handle and write any HTML, CSS or JAVASCRIPT to get the job done, all it needs to do is to create a JSON to define how the interface will be. To create this JSON we have some classes to help you out, so all the developer needs to know is how to call the methods off the class Ewlist/View.
 
