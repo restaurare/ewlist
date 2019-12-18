@@ -73,9 +73,11 @@ return function (App $app) {
 
 ```
 
+Dump-autoload from composer and Optimize with "-o" option, 
 To run the application in development, you can run these commands 
 
 ```bash
+composer dump-autoload -o
 composer start
 ```
 
